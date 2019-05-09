@@ -1,0 +1,264 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+<style type="text/css">
+
+    tr:hover {
+        background-color: aquamarine;
+        color: black;
+        cursor: pointer;
+    }
+</style>
+
+
+
+<div class="container">
+    <div class="form-group">
+        <div class="input-group">
+            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#newForm">Form Olustur</button>
+            <input type="text" id="Search" placeholder="Search" class="form-control">
+        </div>
+    </div>
+</div>
+
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Form Adı</th>
+                <th>Form Açıklaması</th>
+                <th>Form Sahibi</th>
+                <th>Tarih</th>
+            </tr>
+        </thead>
+        <tbody id="content"></tbody>
+    </table>
+</div>
+
+@* Modal *@
+<div id="formModal" class="modal fade" role="dialog" aria-labelledby="formModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3 id="formTitle"></h3>
+            </div>
+            <div class="modal-body">
+                <p id="formDesc"></p>
+            </div>
+            <div class="modal-body">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Ad</label>
+                        <div class="col-md-10">
+                            <input class="form-control" name="name" id="fieldName" type="text" placeholder="Ad giriniz." required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Soyad</label>
+                        <div class="col-md-10">
+                            <input class="form-control" name="surname" id="fieldSurname" type="text" placeholder="Soyad giriniz." required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Yaş</label>
+                        <div class="col-md-10">
+                            <input class="form-control" name="age" id="fieldAge" type="number" placeholder="Yaş giriniz." />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <p id="formDate"></p>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="newForm" class="modal fade" role="dialog" aria-labelledby="newFormLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3>Yeni Form Oluştur</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Form Adı</label>
+                        <div class="col-md-10">
+                            <input class="form-control" name="name" id="newFormName" onkeypress="isEmpty(event)" type="text" placeholder="Form adı girin." required />
+                            <label id="newFormNameLabel" class="control-label text-danger"></label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Form Açıklaması</label>
+                        <div class="col-md-10">
+                            <input class="form-control" name="surname" id="newFormDesc" onkeypress="isEmpty(event)" type="text" placeholder="Açıklama girin." required />
+                            <label id="newFormDescLabel" class="control-label text-danger"></label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Ad</label>
+                        <div class="col-md-10">
+                            <input class="form-control" name="name" id="newName" onkeypress="isEmpty(event)" type="text" placeholder="Ad giriniz." required />
+                            <label id="newNameLabel" class="control-label text-danger"></label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Soyad</label>
+                        <div class="col-md-10">
+                            <input class="form-control" name="surname" id="newSurname" onkeypress="isEmpty(event)" type="text" placeholder="Soyad giriniz." required />
+                            <label id="newSurnameLabel" class="control-label text-danger"></label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Yaş</label>
+                        <div class="col-md-10">
+                            <input class="form-control" name="age" id="newAge" onkeypress="isEmpty(event)" type="number" placeholder="Yaş giriniz." />
+                            <label id="newAgeLabel" class="control-label text-danger"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" onclick="postNewForm()" class="btn btn-primary">Oluştur</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script>
+
+    function getForms() {
+        $('#content').empty();
+        $.ajax({
+            dataType: "json",
+            url: "/Home/forms",
+            success: function doldur(d) {
+                console.log("deneme",d);
+                if (d === "unauthorized") {
+                    window.location.href = "/Home/Login";
+                } else if (d === "notfound") {
+                    window.location.href = "/Home/Index";
+                } else {
+                    d.forEach(i => {
+                        $('#content').append('<tr data-toggle="modal" data-id="' + i.Id + '"onclick="getFormById(' + i.Id + ')" data-target="#formModal" class="Search">' +
+                            '<td>' + i.Name + '</td>' +
+                            '<td>' + i.Description + '</td>' +
+                            '<td>' + i.Users.Username + '</td>' +
+                            '<td>' + i.CreatedAt + '</td>' +
+                            '</tr>');
+                    });
+                }
+            }
+        });
+    }
+
+    function postNewForm() {
+        var count = 0;
+        if ($('#newFormName').val() === "") {
+            $('#newFormNameLabel').text("Bu alan boş geçilemez");
+            count++;
+        }
+        if ($('#newFormDesc').val() === "") {
+            $('#newFormDescLabel').text("Bu alan boş geçilemez");
+            count++;
+        }
+        if ($('#newName').val() === "") {
+            $('#newNameLabel').text("Bu alan boş geçilemez");
+            count++;
+        }
+        if ($('#newSurname').val() === "") {
+            $('#newSurnameLabel').text("Bu alan boş geçilemez");
+            count++;
+        }
+        if (!(/^\d*$/.test($('#newAge').val()))) {
+            $('#newAgeLabel').text("Lütfen geçerli bir yaş girin");
+            count++;
+        }
+        if (count === 0) {
+            $.ajax({
+                type: "post",
+                dataType: "json",
+                url: "/Home/forms",
+                data: {
+                    "Name": $('#newFormName').val(),
+                    "Description": $('#newFormDesc').val(),
+                    "Fields": {
+                        "Name": $('#newName').val(),
+                        "Surname": $('#newSurname').val(),
+                        "Age": $('#newAge').val()
+                    }
+                },
+                success: function doldur(d) {
+                    if (d === 1) {
+                        $('#labelModal').text("");
+                        $('#newForm').modal('hide');
+                        getForms();
+                    } else if (d === 0) {
+                        $('#labelModal').text("Form kaydedilemedi");
+                    } else if (d === -1) {
+                        window.location.href = "/Home/Login";
+                    }
+                }
+            });
+        }
+    }
+
+    function isEmpty(e) {
+        $('#' + e.target.id + 'Label').text("");
+    }   
+
+
+    $(document).ready(function () {
+
+        
+
+        //function Contains(text_one, text_two) {
+        //    if (text_one.indexOf(text_two) != -1) {
+        //        return true;
+        //    }
+
+        //}
+
+        $("#Search").on("keyup", function () {
+            var value = $(this).val().toLocaleLowerCase();
+            $("#content tr").filter(function () {
+                $(this).toggle($(this).children('td').first().text().toLocaleLowerCase().indexOf(value) > -1);
+            });
+        });
+
+
+        //$("#Search").keyup(function () {
+        //    var searchText = $("#Search").val().toLowerCase();
+        //    $(".Search").each(function () {
+        //        if (!Contains($(this).text().toLowerCase(), searchText)) {
+        //            $(this).parent().hide();
+        //        }
+        //        else {
+        //            $(this).parent().show();
+        //        }
+        //    });
+        //});
+
+        //$('table tbody tr').click(function () {
+        //    alert($(this).text());
+        //});
+
+        getForms();
+
+
+    });
+
+</script>
+
